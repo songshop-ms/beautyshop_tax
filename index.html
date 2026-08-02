@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#14493A">
+<meta name="format-detection" content="telephone=no">
+<title>개인사업자 세금 계산기 — 종합소득세 · 부가가치세 | 영구오빠</title>
+<meta name="description" content="1인 사업자를 위한 종합소득세·부가가치세 모의계산기. 채널별 매출 집계부터 신고 가이드까지 한 번에.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="개인사업자 세금 계산기 — 종합소득세 · 부가가치세">
+<meta property="og:description" content="1인 사업자를 위한 종합소득세·부가가치세 모의계산기. 채널별 매출 집계부터 신고 가이드까지.">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%2314493A'/><text y='72' x='50' text-anchor='middle' font-size='58' fill='%23E8B45C' font-family='serif'>₩</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17352B;          /* 장부 녹색 잉크 */
+    --ink-soft:#3E5C50;
+    --paper:#F5F6F2;
+    --card:#FFFFFF;
+    --line:#D9DED7;
+    --line-strong:#B9C4BB;
+    --seal:#B03A2E;         /* 도장 빨강 — 최종 세액에만 사용 */
+    --accent:#0E6B4F;
+    --muted:#7A857D;
+    --num:"IBM Plex Mono","SF Mono","Roboto Mono",ui-monospace,monospace;
+    --body:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,system-ui,sans-serif;
+    /* 가이드북 참조 팔레트 (하단 챕터·플로팅바 전용) */
+    --forest:#14493A;
+    --forest-soft:#9FC3B2;
+    --forest-line:#3C6C5B;
+    --cream:#F3F0E6;
+    --paper2:#FCFBF7;
+    --gold:#E8B45C;
+    --gold-dark:#C8862B;
+    --line2:#DCD7C9;
+    --charcoal:#191A17;
+    --serif:"Noto Serif KR","Apple SD Gothic Neo",serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.55;font-size:15px}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 18px 80px}
+
+  header{border-bottom:3px double var(--line-strong);padding-bottom:18px;margin-bottom:22px}
+  .eyebrow{font-size:12px;letter-spacing:.22em;color:var(--ink-soft);font-weight:600}
+  h1{font-size:clamp(22px,4vw,30px);font-weight:800;letter-spacing:-.02em;margin-top:6px}
+  h1 .yr{color:var(--accent)}
+  header p{color:var(--muted);font-size:13px;margin-top:6px}
+
+  .tabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+  .tab{border:1px solid var(--line-strong);background:var(--card);padding:9px 18px;border-radius:999px;
+       font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:.15s}
+  .tab:hover{border-color:var(--accent)}
+  .tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .panel{display:none}
+  .panel.on{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.panel.on{animation:none}}
+
+  .grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:20px}
+  @media(max-width:840px){.grid{grid-template-columns:1fr}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+  .card h2{font-size:15px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .card h2::before{content:"";width:8px;height:8px;background:var(--accent);border-radius:2px;display:inline-block}
+
+  .field{margin-bottom:14px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:5px}
+  .hint{font-size:12px;color:var(--muted);margin-top:4px}
+  input[type=text],select{
+    width:100%;padding:10px 12px;border:1px solid var(--line-strong);border-radius:8px;
+    font-size:16px;font-family:var(--num);background:#FCFDFB;color:var(--ink)}
+  input:focus,select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+  select{font-family:var(--body);font-size:14px}
+  .won{position:relative}
+  .won input{padding-right:34px;text-align:right}
+  .won::after{content:"원";position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    font-size:13px;color:var(--muted)}
+  .pct::after{content:"%"}
+  .cnt::after{content:"명"}
+  .period-box{margin-top:8px;background:var(--ink);color:#fff;border-radius:10px;padding:12px 14px}
+  .period-box .rng{font-family:var(--num);font-size:16px;font-weight:700;letter-spacing:.02em}
+  .period-box .due{font-size:12px;opacity:.85;margin-top:3px}
+  .kread{font-family:var(--num);font-size:12px;color:var(--accent);text-align:right;margin-top:3px;min-height:15px}
+
+  .seg{display:flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+  .seg button{flex:1;padding:9px 6px;border:0;background:#FCFDFB;font-size:13px;font-weight:600;
+    color:var(--ink-soft);cursor:pointer;border-right:1px solid var(--line)}
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:var(--accent);color:#fff}
+  .seg button:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+
+  /* 결과 장부 */
+  .ledger{width:100%;border-collapse:collapse;font-size:14px}
+  .ledger td{padding:8px 4px;border-bottom:1px dashed var(--line)}
+  .ledger td:last-child{text-align:right;font-family:var(--num);font-weight:600;white-space:nowrap}
+  .ledger tr.sub td{color:var(--muted);font-size:13px;font-weight:400}
+  .ledger tr.sub td:first-child{padding-left:16px}
+  .ledger tr.total td{border-bottom:2px solid var(--ink);font-weight:800;font-size:15px;padding-top:10px}
+  .ledger tr.minus td:last-child{color:var(--seal)}
+
+  .seal-box{margin-top:18px;border:2px solid var(--seal);border-radius:12px;padding:16px 18px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+    background:linear-gradient(0deg,rgba(176,58,46,.04),rgba(176,58,46,.04))}
+  .seal-box .lbl{font-size:13px;font-weight:700;color:var(--seal);letter-spacing:.08em}
+  .seal-box .amt{font-family:var(--num);font-size:clamp(22px,4vw,30px);font-weight:700;color:var(--seal)}
+  .seal-box .per{font-size:12px;color:var(--muted);width:100%}
+  .refund .lbl,.refund .amt{color:var(--accent)}
+  .refund{border-color:var(--accent);background:rgba(14,107,79,.05)}
+
+  /* 세율 구간 워터폴 */
+  .bar{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line-strong);margin:10px 0 6px}
+  .bar div{min-width:2px}
+  .bar-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--ink-soft);font-family:var(--num)}
+  .bar-legend span{display:flex;align-items:center;gap:5px}
+  .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+  .note{background:#FDFBF3;border:1px solid #E8E0C2;border-radius:10px;padding:12px 14px;font-size:13px;
+    color:#6B5F2E;margin-top:16px}
+
+  /* 가이드 */
+  .g-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:840px){.g-grid{grid-template-columns:1fr}}
+  .cal{list-style:none}
+  .cal li{display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line);align-items:baseline}
+  .cal .m{font-family:var(--num);font-weight:700;color:var(--accent);min-width:52px;font-size:14px}
+  .cal .t{font-weight:700;font-size:14px}
+  .cal .d{font-size:13px;color:var(--muted);margin-top:2px}
+  table.info{width:100%;border-collapse:collapse;font-size:13px}
+  table.info th{background:var(--ink);color:#fff;padding:8px;font-weight:600;text-align:left}
+  table.info td{padding:8px;border-bottom:1px solid var(--line)}
+  table.info td.n{font-family:var(--num);text-align:right;white-space:nowrap}
+  .steps{counter-reset:s;list-style:none}
+  .steps li{counter-increment:s;padding:9px 0 9px 34px;position:relative;border-bottom:1px dashed var(--line);font-size:14px}
+  .steps li::before{content:counter(s);position:absolute;left:0;top:9px;width:22px;height:22px;border-radius:50%;
+    background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:var(--num)}
+  .steps b{font-weight:700}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;
+    background:rgba(14,107,79,.1);color:var(--accent);margin-left:6px;vertical-align:1px}
+
+  /* 카톡방 유도 챕터 — 네이버플레이스 가이드북 CTA 스타일 참조 */
+  .kakao-chapter{margin-top:34px;background:var(--forest);color:#F2F0E7;
+    border-radius:14px;padding:44px 40px 38px;position:relative;overflow:hidden}
+  .kakao-chapter .eyebrow2{font-family:var(--num);font-size:11px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--forest-soft);margin-bottom:10px}
+  .kakao-chapter h3{font-family:var(--serif);font-weight:700;font-size:clamp(20px,3vw,26px);
+    line-height:1.5;margin:0 0 12px;color:#F2F0E7}
+  .kakao-chapter > p{font-size:15px;line-height:1.8;color:#CFDDD5;margin:0;max-width:620px}
+  .kakao-inset{margin-top:24px;background:rgba(242,240,231,.07);
+    border:1px solid rgba(242,240,231,.22);border-radius:8px;padding:22px 24px;
+    display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .kakao-inset .ktitle{font-family:var(--num);font-size:11px;letter-spacing:.1em;
+    color:var(--forest-soft);margin-bottom:8px}
+  .kakao-inset .kdesc{font-size:15px;line-height:1.7;color:#F2F0E7}
+  .kakao-cta{flex:0 0 auto;font-family:var(--num);font-size:13px;font-weight:600;
+    color:var(--forest);background:var(--paper2);padding:13px 22px;border-radius:6px;
+    text-decoration:none;white-space:nowrap;transition:opacity .15s}
+  .kakao-cta:hover{opacity:.85}
+  .kakao-chapter .foot{font-family:var(--num);font-size:11px;color:var(--forest-soft);
+    opacity:.75;margin-top:14px}
+
+  /* 면책 문구 */
+  .disclaimer{margin-top:22px;border:1px dashed var(--line-strong);border-radius:12px;
+    padding:16px 18px;background:#FAFAF8;font-size:12.5px;line-height:1.7;color:var(--ink-soft)}
+  .disclaimer b{color:var(--ink)}
+
+  /* 플로팅 바 — 가이드북 dock 스타일 참조 */
+  .float-bar{position:fixed;left:0;right:0;bottom:0;z-index:999;padding:14px}
+  .float-bar .fb-inner{max-width:900px;margin:0 auto;background:var(--charcoal);color:#F2F0E7;
+    border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px;
+    flex-wrap:wrap;box-shadow:0 8px 30px rgba(0,0,0,.28)}
+  .float-bar .fb-txt{flex:1 1 240px;min-width:0}
+  .float-bar .fb-txt .t1{font-size:14.5px;font-weight:600}
+  .float-bar .fb-txt .t2{font-size:12.5px;color:#B7B2A2;margin-top:2px}
+  .float-bar a.kakao-cta{background:var(--gold);color:var(--charcoal);font-size:12.5px;padding:11px 18px}
+  .float-bar .fb-close{background:none;border:0;color:#8a8a8a;font-size:18px;cursor:pointer;
+    padding:2px 6px;line-height:1;flex-shrink:0}
+  .float-bar .fb-close:hover{color:#fff}
+  @media(max-width:560px){.float-bar .fb-txt .t2{display:none}}
+
+  /* ===== 모바일 최적화 ===== */
+  @media(max-width:640px){
+    .wrap{padding:18px 14px 130px}          /* 플로팅바 높이만큼 하단 여백 */
+    header{padding-bottom:14px;margin-bottom:16px}
+    .tabs{gap:6px;margin-bottom:16px;
+      display:grid;grid-template-columns:repeat(3,1fr)}
+    .tab{padding:10px 6px;font-size:12.5px;text-align:center;border-radius:8px}
+    .grid,.g-grid{gap:14px}
+    .card{padding:16px 14px;border-radius:10px}
+    .card h2{font-size:14px;margin-bottom:12px}
+
+    /* 입력 폼 — 터치 타깃 확대, iOS 자동 확대 방지(16px 유지) */
+    input[type=text],select{padding:12px;font-size:16px;border-radius:8px}
+    .seg button{padding:12px 4px;font-size:12px}
+    label{font-size:12.5px}
+    .hint{font-size:11.5px}
+
+    /* 장부 테이블 */
+    .ledger{font-size:13px}
+    .ledger td{padding:7px 2px}
+    .ledger tr.sub td{font-size:12px}
+    .ledger tr.total td{font-size:14px}
+    .seal-box{padding:14px;flex-direction:column;align-items:flex-start;gap:4px}
+    .seal-box .amt{font-size:26px}
+
+    /* 정보 테이블 가로 스크롤 */
+    table.info{font-size:12px;display:block;overflow-x:auto;white-space:nowrap}
+    table.info th,table.info td{padding:7px 8px}
+
+    .cal li{flex-direction:column;gap:2px}
+    .cal .m{min-width:auto}
+    .steps li{padding-left:30px;font-size:13.5px}
+    .note,.disclaimer{font-size:12px;padding:12px}
+    .bar-legend{font-size:11px;gap:4px 10px}
+
+    /* 카톡 챕터 */
+    .kakao-chapter{padding:28px 20px 24px;margin-top:24px;border-radius:12px}
+    .kakao-chapter h3{font-size:19px}
+    .kakao-chapter > p{font-size:14px}
+    .kakao-inset{padding:18px 16px;gap:14px}
+    .kakao-cta{width:100%;text-align:center;padding:14px 18px}
+
+    /* 플로팅 바 */
+    .float-bar{padding:10px}
+    .float-bar .fb-inner{padding:11px 12px;gap:10px;border-radius:10px}
+    .float-bar .fb-txt .t1{font-size:13px}
+    .float-bar a.kakao-cta{width:auto;padding:10px 14px;font-size:12px}
+  }
+
+  @media(max-width:380px){
+    .tabs{grid-template-columns:1fr 1fr 1fr}
+    .tab{font-size:11.5px;padding:9px 3px}
+    .seal-box .amt{font-size:23px}
+  }
+
+  /* 인쇄 시 플로팅바·탭 숨김 */
+  @media print{
+    .float-bar,.tabs{display:none!important}
+    .panel{display:block!important}
+    body{background:#fff}
+    .card{break-inside:avoid;border:1px solid #ccc}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">개인사업자 세무 프로그램</div>
+  <h1>세금 계산 장부 <span class="yr" id="yearLabel">2025년 귀속</span></h1>
+  <p>종합소득세·부가가치세 모의계산 + 신고 가이드 · 실제 신고는 홈택스(hometax.go.kr) 기준으로 확정하세요</p>
+  <div class="field" style="max-width:260px;margin-top:16px">
+    <label style="margin-bottom:4px">귀속연도 (매출이 발생한 연도)</label>
+    <select id="taxYear"></select>
+  </div>
+</header>
+
+<div class="tabs" role="tablist">
+  <button class="tab on" data-p="p0" role="tab">수입금액 집계</button>
+  <button class="tab" data-p="p1" role="tab">종합소득세</button>
+  <button class="tab" data-p="p2" role="tab">부가가치세</button>
+  <button class="tab" data-p="p3" role="tab">신고 가이드 · 일정</button>
+</div>
+
+<!-- ===================== 수입금액 집계 ===================== -->
+<section id="p0" class="panel on">
+<div class="grid">
+  <div class="card">
+    <h2>연간 매출을 결제 채널별로 입력</h2>
+
+    <div class="field">
+      <label>집계 목적 선택 — 몇 월부터 몇 월까지 넣어야 하나?</label>
+      <select id="period">
+        <option value="y">종합소득세 신고용 (1년 전체)</option>
+        <option value="v1">부가세 1기 확정 — 일반과세자 (상반기)</option>
+        <option value="v2">부가세 2기 확정 — 일반과세자 (하반기)</option>
+        <option value="vs">부가세 신고용 — 간이과세자 (1년 전체)</option>
+      </select>
+      <div class="hint">상단 <b>귀속연도</b> 선택에 따라 아래 기간이 자동으로 바뀝니다.</div>
+      <div class="period-box">
+        <div class="rng" id="periodRng"></div>
+        <div class="due" id="periodDue"></div>
+      </div>
+    </div>
+
+    <div class="hint" style="margin-bottom:14px">위 기간 동안 <b>실제로 받은 금액</b>을 채널별로 합산해 넣으세요. 결제 수단과 관계없이 전부 과세 대상 수입금액입니다.</div>
+
+    <div class="field">
+      <label>① 카드 단말기 매출 (신용·체크카드 결제액)</label>
+      <div class="won"><input type="text" id="c_card" inputmode="numeric" placeholder="0"></div>
+      <div class="kread" id="c_cardK"></div>
+    </div>
+    <div class="field">
+      <label>② 지역화폐·제로페이·간편결제 매출</label>
+      <div class="won"><input type="text" id="c_local" inputmode="numeric" placeholder="0"></div>
+      <div class="kread" id="c_localK"></div>
+    </div>
+    <div class="field">
+      <label>③ 계좌이체로 받은 매출</label>
+      <div class="won"><input type="text" id="c_bank" inputmode="numeric" placeholder="0"></div>
+      <div class="kread" id="c_bankK"></div>
+      <div class="hint">예약금·시술비를 통장으로 직접 받은 금액 전부. 통장 거래내역에서 매출분만 뽑아 합산</div>
+    </div>
+    <div class="field">
+      <label>④ 현금 매출 (현금영수증 발행분 + 미발행분)</label>
+      <div class="won"><input type="text" id="c_cash" inputmode="numeric" placeholder="0"></div>
+      <div class="kread" id="c_cashK"></div>
+      <div class="hint">10만 원 이상 현금거래는 소비자 요청 없어도 현금영수증 의무발행 업종 여부 확인 필요</div>
+    </div>
+
+    <div class="note" style="margin-top:4px">⚠️ <b>타인 명의(비사업자) 단말기 결제분도 ①에 포함해야 합니다.</b> 명의위장 가맹점 이용은 여신전문금융업법 위반이고, 해당 매출 누락이 적발되면 부가세·소득세 추징 + 부당과소신고 가산세 40% + 납부지연 가산세가 붙습니다. 카드사·PG 자료와 계좌이체 내역 모두 국세청이 조회 가능한 자료라, 세무조사 시 가장 먼저 대사(對査)하는 항목입니다.</div>
+  </div>
+
+  <div class="card">
+    <h2>집계 결과 · 자료 성격</h2>
+    <table class="info">
+      <tr><th>채널</th><th style="text-align:right">금액</th><th>국세청 파악</th></tr>
+      <tr><td>카드 매출</td><td class="n" id="a_card">0</td><td>자동 (카드사 통보)</td></tr>
+      <tr><td>지역화폐·간편결제</td><td class="n" id="a_local">0</td><td>자동 (운영사 통보)</td></tr>
+      <tr><td>계좌이체</td><td class="n" id="a_bank">0</td><td><b>본인 신고 필요</b></td></tr>
+      <tr><td>현금</td><td class="n" id="a_cash">0</td><td><b>본인 신고 필요</b></td></tr>
+    </table>
+
+    <table class="ledger" style="margin-top:16px">
+      <tr class="total"><td>연간 총 매출 (공급대가, 부가세 포함)</td><td id="a_total">0</td></tr>
+      <tr class="sub"><td>공급가액 (총매출 ÷ 1.1) — 일반과세자 기준</td><td id="a_supply">0</td></tr>
+      <tr class="sub"><td>내 매출에 포함된 부가세 (÷ 11)</td><td id="a_vat">0</td></tr>
+    </table>
+
+    <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+      <button class="tab" id="btnToIncome" style="background:var(--accent);color:#fff;border-color:var(--accent)">종합소득세 계산기로 보내기 →</button>
+      <button class="tab" id="btnToVat">부가가치세 계산기로 보내기 →</button>
+    </div>
+    <div class="hint" style="margin-top:8px">종소세에는 공급가액이, 부가세에는 과세유형에 맞는 금액(일반: 공급가액 / 간이: 공급대가)이 자동 입력됩니다.</div>
+
+    <div class="note">💡 신고 전 체크: 5월 홈택스 <b>신고도움 서비스</b>에 국세청이 이미 파악한 내 수입금액(카드·현금영수증·지역화폐)이 뜹니다. 내 집계액이 그 금액보다 크면 정상(계좌이체·현금이 더해진 것), <b>작으면 누락 상태</b>라는 뜻입니다. 매출 노출이 늘어 세부담이 걱정되면 숨기는 게 아니라 ① 경비 증빙(임차료·재료비 세금계산서, 사업용카드) 확보 ② 노란우산공제 ③ 카드발행 세액공제 1.3%로 낮추는 게 합법 루트입니다.</div>
+  </div>
+</div>
+</section>
+
+<!-- ===================== 종합소득세 ===================== -->
+<section id="p1" class="panel">
+<div class="grid">
+  <div class="card">
+    <h2>입력 — 사업소득</h2>
+
+    <div class="field">
+      <label>신고 방식</label>
+      <div class="seg" id="mode">
+        <button class="on" data-v="book">장부기장 (실제 경비)</button>
+        <button data-v="rate">추계신고 (경비율)</button>
+      </div>
+      <div class="hint" id="modeHint">간편장부·복식부기 등 실제 지출 경비를 입력합니다.</div>
+    </div>
+
+    <div class="field">
+      <label>연간 수입금액 (매출, 공급가액)</label>
+      <div class="won"><input type="text" id="rev" inputmode="numeric" placeholder="120,000,000"></div>
+      <div class="kread" id="revK"></div>
+    </div>
+
+    <div class="field" id="expField">
+      <label>필요경비 (임차료·재료비·인건비 등 연간 합계)</label>
+      <div class="won"><input type="text" id="exp" inputmode="numeric" placeholder="50,000,000"></div>
+      <div class="kread" id="expK"></div>
+    </div>
+
+    <div class="field" id="rateField" style="display:none">
+      <label>적용 경비율</label>
+      <div class="won pct"><input type="text" id="rate" inputmode="decimal" placeholder="70"></div>
+      <div class="hint">단순/기준경비율은 홈택스 → 조회/발급 → 기준·단순경비율 조회에서 본인 업종코드로 확인 (미용업 등 서비스업은 업종코드별 상이)</div>
+    </div>
+
+    <hr style="border:0;border-top:1px dashed var(--line);margin:18px 0">
+    <h2>근로소득 (직장이 있는 경우)</h2>
+    <div class="field">
+      <label>연간 총급여 (비과세 제외, 원천징수영수증 기준)</label>
+      <div class="won"><input type="text" id="salary" inputmode="numeric" placeholder="0"></div>
+      <div class="kread" id="salaryK"></div>
+      <div class="hint">근로소득공제는 자동 계산됩니다. 회사 연말정산으로 이미 낸 세금(원천징수영수증의 <b>결정세액</b>)은 아래 '기납부세액'에 넣으세요 — 그만큼 차감됩니다.</div>
+    </div>
+
+    <hr style="border:0;border-top:1px dashed var(--line);margin:18px 0">
+    <h2>소득공제 · 세액공제</h2>
+
+    <div class="field">
+      <label>부양가족 수 (본인 제외, 소득요건 충족자)</label>
+      <div class="won cnt"><input type="text" id="dep" inputmode="numeric" placeholder="0" value="0"></div>
+      <div class="hint">본인 기본공제 150만 원은 자동 반영, 부양가족 1인당 150만 원 추가</div>
+    </div>
+
+    <div class="field">
+      <label>자녀 수 (8세 이상, 자녀세액공제 대상)</label>
+      <div class="won cnt"><input type="text" id="kids" inputmode="numeric" placeholder="0" value="0"></div>
+    </div>
+
+    <div class="field">
+      <label>국민연금 연간 납부액</label>
+      <div class="won"><input type="text" id="np" inputmode="numeric" placeholder="0"></div>
+      <div class="kread" id="npK"></div>
+    </div>
+
+    <div class="field">
+      <label>노란우산공제 연간 납입액</label>
+      <div class="won"><input type="text" id="yellow" inputmode="numeric" placeholder="0"></div>
+      <div class="hint">한도 자동 적용: 사업소득금액 4천만 이하 600만 / 1억 이하 400만 / 초과 200만 (2025년 귀속)</div>
+    </div>
+
+    <div class="field">
+      <label>기납부세액 (중간예납 + 원천징수된 3.3% 등)</label>
+      <div class="won"><input type="text" id="paid" inputmode="numeric" placeholder="0"></div>
+      <div class="kread" id="paidK"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>계산 결과 — 세액 장부</h2>
+    <table class="ledger">
+      <tr><td>수입금액</td><td id="r_rev">0</td></tr>
+      <tr class="minus"><td>(−) 필요경비</td><td id="r_exp">0</td></tr>
+      <tr class="total"><td>사업소득금액</td><td id="r_income">0</td></tr>
+      <tr><td>(+) 근로소득금액 <span id="r_earnDed" style="font-weight:400;color:var(--muted);font-size:12px"></span></td><td id="r_earn">0</td></tr>
+      <tr class="total"><td>종합소득금액</td><td id="r_gross">0</td></tr>
+      <tr class="minus sub"><td>(−) 인적공제</td><td id="r_pers">0</td></tr>
+      <tr class="minus sub"><td>(−) 국민연금</td><td id="r_np">0</td></tr>
+      <tr class="minus sub"><td>(−) 노란우산공제 <span id="r_ycap" style="font-weight:400;color:var(--muted)"></span></td><td id="r_yellow">0</td></tr>
+      <tr class="total"><td>과세표준</td><td id="r_base">0</td></tr>
+    </table>
+
+    <div style="margin-top:14px;font-size:13px;font-weight:700;color:var(--ink-soft)">과세표준의 세율 구간 분포</div>
+    <div class="bar" id="bar"></div>
+    <div class="bar-legend" id="barLegend"></div>
+
+    <table class="ledger" style="margin-top:16px">
+      <tr><td>산출세액 <span style="color:var(--muted);font-weight:400" id="r_marginal"></span></td><td id="r_calc">0</td></tr>
+      <tr class="minus sub"><td>(−) 표준세액공제 7만 + 전자신고 2만</td><td id="r_std">90,000</td></tr>
+      <tr class="minus sub"><td>(−) 자녀세액공제</td><td id="r_kid">0</td></tr>
+      <tr class="total"><td>결정세액 (소득세)</td><td id="r_final">0</td></tr>
+      <tr><td>(+) 지방소득세 (소득세의 10%)</td><td id="r_local">0</td></tr>
+      <tr class="minus"><td>(−) 기납부세액</td><td id="r_paid">0</td></tr>
+    </table>
+
+    <div class="seal-box" id="sealBox">
+      <div class="lbl" id="sealLbl">납부할 세액 (소득세+지방세)</div>
+      <div class="amt" id="sealAmt">0 원</div>
+      <div class="per" id="sealPer"></div>
+    </div>
+
+    <div class="note">📌 모의계산입니다. 건강보험료(지역가입자)는 필요경비로, 각종 감면(중소기업특별세액감면 등)·연금저축 세액공제는 별도 적용될 수 있어 실제 세액은 달라질 수 있습니다.</div>
+  </div>
+</div>
+</section>
+
+<!-- ===================== 부가가치세 ===================== -->
+<section id="p2" class="panel">
+<div class="grid">
+  <div class="card">
+    <h2>입력 — 부가가치세</h2>
+    <div class="field">
+      <label>과세 유형</label>
+      <div class="seg" id="vatMode">
+        <button class="on" data-v="gen">일반과세자</button>
+        <button data-v="simple">간이과세자</button>
+      </div>
+      <div class="hint">직전 연도 공급대가 1억 400만 원 미만이면 간이과세 대상 (미용업 포함)</div>
+    </div>
+    <div class="field">
+      <label id="vatRevLbl">과세기간 매출액 (공급가액, 부가세 제외)</label>
+      <div class="won"><input type="text" id="vRev" inputmode="numeric" placeholder="60,000,000"></div>
+      <div class="kread" id="vRevK"></div>
+    </div>
+    <div class="field" id="vBuyField">
+      <label>매입세액 (세금계산서·카드매입분 부가세 합계)</label>
+      <div class="won"><input type="text" id="vBuy" inputmode="numeric" placeholder="2,000,000"></div>
+      <div class="kread" id="vBuyK"></div>
+    </div>
+    <div class="field" id="vBuyAmtField" style="display:none">
+      <label>매입금액 (공급대가 합계 — 0.5% 세액공제)</label>
+      <div class="won"><input type="text" id="vBuyAmt" inputmode="numeric" placeholder="20,000,000"></div>
+    </div>
+    <div class="field" id="vRateField" style="display:none">
+      <label>업종별 부가가치율</label>
+      <select id="vRate">
+        <option value="15">숙박·음식점업 — 15%</option>
+        <option value="20">제조업·소매업 등 — 20%</option>
+        <option value="25">농임어업·건설업 등 — 25%</option>
+        <option value="30" selected>미용업 등 기타 서비스업 — 30%</option>
+        <option value="40">부동산임대·과학기술 서비스 등 — 40%</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>신용카드 등 발행 세액공제 대상 매출 (개인사업자)</label>
+      <div class="won"><input type="text" id="vCard" inputmode="numeric" placeholder="0"></div>
+      <div class="hint">카드·현금영수증 발행액(부가세 포함)의 1.3%, 연 1,000만 원 한도 — 직전 연도 공급가액 10억 이하 개인사업자</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>계산 결과</h2>
+    <table class="ledger">
+      <tr><td id="v_r1l">매출세액 (매출 × 10%)</td><td id="v_r1">0</td></tr>
+      <tr class="minus"><td id="v_r2l">(−) 매입세액</td><td id="v_r2">0</td></tr>
+      <tr class="minus"><td>(−) 신용카드 발행 세액공제</td><td id="v_r3">0</td></tr>
+    </table>
+    <div class="seal-box" id="vSealBox">
+      <div class="lbl" id="vSealLbl">납부할 부가가치세</div>
+      <div class="amt" id="vSealAmt">0 원</div>
+      <div class="per" id="vSealPer"></div>
+    </div>
+    <div class="note">📌 일반과세자는 1년에 2번(1월·7월), 간이과세자는 1번(다음해 1월) 신고합니다. 간이과세자는 연 매출(공급대가) 4,800만 원 미만이면 납부의무가 면제됩니다(신고는 필요). 간이과세자는 매입세액이 커도 환급받을 수 없습니다.</div>
+  </div>
+</div>
+</section>
+
+<!-- ===================== 가이드 ===================== -->
+<section id="p3" class="panel">
+<div class="g-grid">
+
+  <div class="card" style="grid-column:1/-1">
+    <h2>처음 신고하는 1인 사업자 로드맵 (근로소득 겸업 기준)</h2>
+    <ol class="steps">
+      <li><b>준비 (지금 바로):</b> 홈택스 가입 + 공동/간편인증 등록 → <b>사업용 신용카드 등록</b>(조회/발급 메뉴) → 사업용 계좌를 하나로 정해 매출·경비만 그 통장으로. 이것만 해두면 경비 증빙의 80%가 자동 수집됩니다.</li>
+      <li><b>평소 (매월 말 10분):</b> 이 프로그램 집계 탭 기준으로 카드/지역화폐/계좌이체/현금 매출을 엑셀이나 메모에 월별 기록. 임차료·재료비는 반드시 <b>세금계산서나 카드</b>로 결제 (현금 주고 증빙 없으면 경비 인정 못 받음).</li>
+      <li><b>1월 (부가세):</b> 홈택스 → 부가가치세 신고. 카드·현금영수증 매출은 자동으로 채워져 있음 → 계좌이체·현금 매출을 <b>'기타매출'로 직접 추가</b> → 매입(경비) 자료 확인 → 제출. 간이과세자는 이것으로 1년치 끝.</li>
+      <li><b>5월 (종소세):</b> 홈택스 → 종합소득세 신고 → 로그인하면 뜨는 <b>'신고도움 서비스'부터 확인</b> — 내 안내유형(단순경비율/간편장부 등)과 국세청이 파악한 수입금액이 나옵니다. 여기 뜨는 숫자가 출발점.</li>
+      <li><b>근로소득 합산:</b> 신고서 작성 중 '근로소득 불러오기'를 누르면 회사 연말정산 자료가 자동으로 들어옵니다. 사업소득과 합산되어 세금이 다시 계산되고, 회사에서 낸 세금(결정세액)은 기납부세액으로 자동 차감 — 직접 계산할 필요 없음.</li>
+      <li><b>사업소득 입력:</b> 첫해 매출이 적으면 '모두채움/단순경비율'로 클릭 몇 번에 끝. 매출이 커졌다면(서비스업 7,500만↑) 복식부기 의무라 세무사 기장(월 10~15만)을 맡기는 게 가산세보다 쌉니다.</li>
+      <li><b>마무리:</b> 지방소득세(소득세의 10%)는 마지막 화면에서 위택스 연계 원클릭 → 납부는 계좌이체/카드, 1,000만 원 넘으면 2개월 분납 신청 가능. 신고서 PDF는 꼭 저장(비자·대출 소득증빙으로 사용).</li>
+    </ol>
+    <div class="note" style="margin-top:12px">🧭 요약: <b>평소엔 기록만, 1월엔 부가세, 5월엔 종소세.</b> 첫 신고가 불안하면 5월에 세무서 방문 신고창구나 국세상담센터(126)에서 무료로 도와줍니다. 첫해 한 번만 세무사에게 신고대리(건당 10~20만 원 수준)를 맡겨 구조를 익히는 것도 좋은 방법입니다.</div>
+  </div>
+
+  <div class="card">
+    <h2>연간 세무 캘린더</h2>
+    <ul class="cal">
+      <li><span class="m">1월</span><div><div class="t">부가가치세 확정신고 <span class="tag">~1/25</span></div><div class="d">일반과세자: 전년 하반기분 / 간이과세자: 전년 1년치</div></div></li>
+      <li><span class="m">2월</span><div><div class="t">면세사업장현황신고 · 연말정산</div><div class="d">직원이 있다면 근로소득 연말정산 (3/10 지급명세서 제출)</div></div></li>
+      <li><span class="m">5월</span><div><div class="t">종합소득세 확정신고 <span class="tag">5/1~5/31</span></div><div class="d">전년도 사업·이자·배당·근로·연금·기타소득 합산 신고 + 지방소득세 동시 신고</div></div></li>
+      <li><span class="m">6월</span><div><div class="t">성실신고확인 대상자 종소세 신고 <span class="tag">~6/30</span></div><div class="d">서비스업 기준 연 수입 5억 원 이상</div></div></li>
+      <li><span class="m">7월</span><div><div class="t">부가가치세 확정신고 <span class="tag">~7/25</span></div><div class="d">일반과세자: 상반기분 (간이과세자는 예정부과 고지분 납부만)</div></div></li>
+      <li><span class="m">11월</span><div><div class="t">종합소득세 중간예납 <span class="tag">~11/30</span></div><div class="d">전년 납부세액의 1/2 고지 — 5월 확정신고 때 기납부세액으로 차감</div></div></li>
+      <li><span class="m">매월</span><div><div class="t">원천세 신고·납부 <span class="tag">~10일</span></div><div class="d">직원·프리랜서(3.3%)에게 지급한 급여가 있는 경우만 — <b>직원 없는 1인 사업자는 해당 없음</b></div></div></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>홈택스 신고 순서 (종합소득세)</h2>
+    <ol class="steps">
+      <li><b>홈택스 로그인</b> → 세금신고 → 종합소득세 신고. 5월에 국세청이 보낸 <b>신고안내문</b>(카톡·우편)에서 내 안내유형·기장의무부터 확인</li>
+      <li>수입이 단순하면 <b>모두채움 신고</b>로 국세청이 채워준 금액 확인 후 제출 — 가장 간단</li>
+      <li>장부기장 시: 간편장부 작성분을 <b>총수입금액 및 필요경비명세서</b>로 입력, 복식부기는 세무대리인 조정 권장</li>
+      <li>추계신고 시: 업종코드 입력 → 단순/기준경비율 자동 적용</li>
+      <li>소득공제(인적공제·국민연금·노란우산) → 세액공제(자녀·전자신고 2만 원) 입력</li>
+      <li>지방소득세는 신고 마지막 단계에서 <b>위택스 연계</b>로 원클릭 신고</li>
+      <li>납부: 홈택스 계좌이체·카드 (1,000만 원 초과 시 <b>2개월 분납</b> 가능)</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>기장의무 · 경비율 기준 (서비스업 — 미용업 등)</h2>
+    <table class="info">
+      <tr><th>구분</th><th>직전연도 수입금액 기준</th></tr>
+      <tr><td><b>복식부기 의무</b></td><td class="n">7,500만 원 이상</td></tr>
+      <tr><td><b>간편장부 대상</b></td><td class="n">7,500만 원 미만 (신규 포함)</td></tr>
+      <tr><td><b>단순경비율</b> (추계)</td><td class="n">2,400만 원 미만 · 신규는 7,500만 원 미만</td></tr>
+      <tr><td><b>기준경비율</b> (추계)</td><td class="n">단순경비율 기준 초과 시</td></tr>
+      <tr><td><b>성실신고확인 대상</b></td><td class="n">5억 원 이상 (당해연도)</td></tr>
+    </table>
+    <div class="note" style="margin-top:12px">💡 복식부기 의무자가 추계(경비율)로 신고하면 <b>무기장가산세 20%</b>가 붙습니다. 매출이 7,500만 원을 넘으면 기장(세무대리인 기장료 월 10~15만 원 수준)이 사실상 필수이며, 간편장부 대상자가 복식부기로 신고하면 <b>기장세액공제 20%</b>(한도 100만 원)를 받습니다.</div>
+  </div>
+
+  <div class="card">
+    <h2><span id="bracketYearLabel">2025년</span> 귀속 종합소득세 세율표</h2>
+    <div class="hint" id="bracketNote" style="margin-top:-8px;margin-bottom:10px"></div>
+    <table class="info">
+      <tr><th>과세표준</th><th style="text-align:right">세율</th><th style="text-align:right">누진공제</th></tr>
+      <tr><td>1,400만 원 이하</td><td class="n">6%</td><td class="n">—</td></tr>
+      <tr><td>5,000만 원 이하</td><td class="n">15%</td><td class="n">126만</td></tr>
+      <tr><td>8,800만 원 이하</td><td class="n">24%</td><td class="n">576만</td></tr>
+      <tr><td>1억 5천만 원 이하</td><td class="n">35%</td><td class="n">1,544만</td></tr>
+      <tr><td>3억 원 이하</td><td class="n">38%</td><td class="n">1,994만</td></tr>
+      <tr><td>5억 원 이하</td><td class="n">40%</td><td class="n">2,594만</td></tr>
+      <tr><td>10억 원 이하</td><td class="n">42%</td><td class="n">3,594만</td></tr>
+      <tr><td>10억 원 초과</td><td class="n">45%</td><td class="n">6,594만</td></tr>
+    </table>
+    <div class="note" style="margin-top:12px">💡 절세 체크리스트: ① 사업용 카드·계좌 등록으로 경비 증빙 자동화 ② 노란우산공제 (소득공제 + 폐업 시 목돈) ③ 임차료·재료비 세금계산서 꼭 수취 ④ 직원 인건비는 원천세 신고해야 경비 인정 ⑤ 5월 신고 전 홈택스 '신고도움 서비스'에서 국세청이 파악한 내 수입금액 대조</div>
+  </div>
+
+</div>
+</section>
+
+<div class="kakao-chapter">
+  <div class="eyebrow2">Before you file · 영구오빠</div>
+  <h3>합법화되어가는 시장,<br>함께 이 시장을 선점해 가며 성장하는 곳이 필요합니다</h3>
+  <p>경비 처리가 애매할 때, 홈택스 화면이 이해가 안 갈 때, 다른 샵은 얼마나 내는지 궁금할 때 — 더이상 혼자서 고민할 필요 없습니다.</p>
+  <div class="kakao-inset">
+    <div style="flex:1 1 280px">
+      <div class="ktitle">영구오빠 단톡방</div>
+    </div>
+    <a class="kakao-cta" href="https://open.kakao.com/o/pfEDVwFi" target="_blank" rel="noopener">단톡방 입장하기 →</a>
+  </div>
+  <div class="foot">무료 입장</div>
+</div>
+
+<div class="disclaimer">
+  ⚠️ <b>이 프로그램은 대략적인 세금 규모를 가늠해보는 추정 도구일 뿐, 실제 세금과는 차이가 있을 수 있습니다.</b><br>
+  업종·매출 구성·경비 증빙 방식·감면 적용 여부 등 샵마다 사정과 상황이 전부 다르기 때문에, 이 프로그램만으로 실제 납부세액을 정확히 추산할 수는 없습니다. 정확한 세금 신고는 반드시 세무사 등 전문가와 함께 진행하시길 추천드립니다.
+</div>
+
+</div>
+
+<div class="float-bar" id="floatBar">
+  <div class="fb-inner">
+    <div class="fb-txt">
+      <div class="t1">세금 신고, 막히는 부분 있으신가요?</div>
+      <div class="t2">변해가는 시장을 가장 발빠르게 대처하는 곳입니다</div>
+    </div>
+    <a class="kakao-cta" href="https://open.kakao.com/o/pfEDVwFi" target="_blank" rel="noopener">단톡방 입장 →</a>
+    <button class="fb-close" id="fbClose" aria-label="닫기">×</button>
+  </div>
+</div>
+
+<script>
+// ---------- 유틸 ----------
+const $=id=>document.getElementById(id);
+const num=v=>{const n=parseFloat(String(v).replace(/[^0-9.]/g,""));return isNaN(n)?0:n};
+const fmt=n=>Math.round(n).toLocaleString("ko-KR");
+function korean(n){ // 1억 2,345만원 식 읽기
+  n=Math.round(n); if(n<=0)return"";
+  const eok=Math.floor(n/1e8), man=Math.floor((n%1e8)/1e4), rest=n%1e4;
+  let s="";
+  if(eok)s+=eok.toLocaleString()+"억 ";
+  if(man)s+=man.toLocaleString()+"만 ";
+  if(rest&&!eok&&!man)s+=rest.toLocaleString();
+  return s.trim()+"원";
+}
+function bindMoney(id,kId){
+  const el=$(id);
+  el.addEventListener("input",()=>{
+    const raw=num(el.value);
+    el.value=raw?fmt(raw):"";
+    if(kId)$(kId).textContent=korean(raw);
+    calcAll();
+  });
+}
+
+// ---------- 탭 ----------
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+  document.querySelectorAll(".panel").forEach(x=>x.classList.remove("on"));
+  t.classList.add("on");$(t.dataset.p).classList.add("on");
+}));
+
+// ---------- 세그먼트 ----------
+let mode="book", vatMode="gen";
+$("mode").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+  $("mode").querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");mode=b.dataset.v;
+  $("expField").style.display=mode==="book"?"":"none";
+  $("rateField").style.display=mode==="rate"?"":"none";
+  $("modeHint").textContent=mode==="book"
+    ?"간편장부·복식부기 등 실제 지출 경비를 입력합니다."
+    :"장부 없이 국세청 고시 경비율만큼 경비를 인정받는 방식입니다.";
+  calcAll();
+}));
+$("vatMode").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+  $("vatMode").querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");vatMode=b.dataset.v;
+  $("vBuyField").style.display=vatMode==="gen"?"":"none";
+  $("vBuyAmtField").style.display=vatMode==="simple"?"":"none";
+  $("vRateField").style.display=vatMode==="simple"?"":"none";
+  $("vatRevLbl").textContent=vatMode==="gen"
+    ?"과세기간 매출액 (공급가액, 부가세 제외)"
+    :"연간 매출액 (공급대가, 부가세 포함)";
+  calcAll();
+}));
+
+// ---------- 종합소득세 ----------
+const BR=[
+  [14000000,.06],[50000000,.15],[88000000,.24],[150000000,.35],
+  [300000000,.38],[500000000,.40],[1000000000,.42],[Infinity,.45]
+];
+const COLORS=["#9EC5AB","#6FAE8F","#3F8F70","#1F6E52","#155540","#0F3F30","#0A2C22","#B03A2E"];
+
+function incomeTax(base){
+  let tax=0,prev=0,parts=[];
+  for(const[cap,rate]of BR){
+    if(base>prev){
+      const amt=Math.min(base,cap)-prev;
+      tax+=amt*rate;
+      parts.push({amt,rate,tax:amt*rate});
+    }
+    prev=cap;
+    if(base<=cap)break;
+  }
+  return{tax,parts};
+}
+
+function earnedDeduction(sal){ // 근로소득공제
+  if(sal<=0)return 0;
+  let d;
+  if(sal<=5000000)d=sal*0.7;
+  else if(sal<=15000000)d=3500000+(sal-5000000)*0.4;
+  else if(sal<=45000000)d=7500000+(sal-15000000)*0.15;
+  else if(sal<=100000000)d=12000000+(sal-45000000)*0.05;
+  else d=14750000+(sal-100000000)*0.02;
+  return Math.min(d,20000000);
+}
+
+function calcIncome(){
+  const rev=num($("rev").value);
+  let exp;
+  if(mode==="book"){exp=Math.min(num($("exp").value),rev);}
+  else{const r=Math.min(num($("rate").value),100);exp=rev*r/100;}
+  const income=Math.max(0,rev-exp); // 사업소득금액
+
+  const sal=num($("salary").value);
+  const earnDed=earnedDeduction(sal);
+  const earn=Math.max(0,sal-earnDed); // 근로소득금액
+  const gross=income+earn;            // 종합소득금액
+
+  const dep=num($("dep").value), kids=num($("kids").value);
+  const pers=1500000*(1+dep);
+  const np=Math.min(num($("np").value),gross);
+  const yCap=income<=40000000?6000000:income<=100000000?4000000:2000000;
+  const yellow=Math.min(num($("yellow").value),yCap,income);
+  const base=Math.max(0,gross-pers-np-yellow);
+
+  const{tax:calc,parts}=incomeTax(base);
+  let kidCredit=0;
+  if(kids>=1)kidCredit+=250000;
+  if(kids>=2)kidCredit+=300000;
+  if(kids>=3)kidCredit+=(kids-2)*400000;
+  const stdCredit=base>0?90000:0;
+  const finalTax=Math.max(0,calc-stdCredit-kidCredit);
+  const local=finalTax*0.1;
+  const paid=num($("paid").value);
+  const due=finalTax+local-paid;
+
+  // 출력
+  $("r_rev").textContent=fmt(rev);
+  $("r_exp").textContent=fmt(exp);
+  $("r_income").textContent=fmt(income);
+  $("r_earn").textContent=fmt(earn);
+  $("r_earnDed").textContent=sal>0?`(총급여 ${fmt(sal)} − 근로소득공제 ${fmt(earnDed)})`:"";
+  $("r_gross").textContent=fmt(gross);
+  $("r_pers").textContent=fmt(pers);
+  $("r_np").textContent=fmt(np);
+  $("r_yellow").textContent=fmt(yellow);
+  $("r_ycap").textContent=yellow>=yCap&&yellow>0?"(한도 적용)":"";
+  $("r_base").textContent=fmt(base);
+  $("r_calc").textContent=fmt(calc);
+  $("r_std").textContent=fmt(stdCredit);
+  $("r_kid").textContent=fmt(kidCredit);
+  $("r_final").textContent=fmt(finalTax);
+  $("r_local").textContent=fmt(local);
+  $("r_paid").textContent=fmt(paid);
+  const marg=parts.length?Math.round(parts[parts.length-1].rate*100):0;
+  $("r_marginal").textContent=base>0?`· 한계세율 ${marg}%`:"";
+
+  const box=$("sealBox");
+  if(due<0){
+    box.classList.add("refund");
+    $("sealLbl").textContent="환급받을 세액";
+    $("sealAmt").textContent=fmt(-due)+" 원";
+  }else{
+    box.classList.remove("refund");
+    $("sealLbl").textContent="납부할 세액 (소득세+지방세)";
+    $("sealAmt").textContent=fmt(due)+" 원";
+  }
+  $("sealPer").textContent=(rev>0||sal>0)
+    ?`실효세율: 종합소득 대비 ${gross>0?((finalTax+local)/gross*100).toFixed(1):0}% · ${korean(Math.abs(due))}`
+    :"";
+
+  // 워터폴 바
+  const bar=$("bar"),leg=$("barLegend");
+  bar.innerHTML="";leg.innerHTML="";
+  if(base>0){
+    parts.forEach((p,i)=>{
+      const d=document.createElement("div");
+      d.style.width=(p.amt/base*100)+"%";
+      d.style.background=COLORS[i];
+      d.title=`${Math.round(p.rate*100)}% 구간: ${fmt(p.amt)}원 → 세액 ${fmt(p.tax)}원`;
+      bar.appendChild(d);
+      const s=document.createElement("span");
+      s.innerHTML=`<span class="dot" style="background:${COLORS[i]}"></span>${Math.round(p.rate*100)}% · ${fmt(p.tax)}원`;
+      leg.appendChild(s);
+    });
+  }else{
+    bar.innerHTML='<div style="width:100%;background:#EDF0EA"></div>';
+  }
+}
+
+// ---------- 부가가치세 ----------
+function calcVat(){
+  const rev=num($("vRev").value);
+  const card=num($("vCard").value);
+  const cardCredit=Math.min(card*0.013,10000000);
+  let out,dedLbl,ded,due;
+  if(vatMode==="gen"){
+    out=rev*0.1;
+    ded=Math.min(num($("vBuy").value),1e15);
+    $("v_r1l").textContent="매출세액 (매출 × 10%)";
+    $("v_r2l").textContent="(−) 매입세액";
+  }else{
+    const r=num($("vRate").value)/100;
+    out=rev*r*0.1;
+    ded=num($("vBuyAmt").value)*0.005;
+    $("v_r1l").textContent="매출세액 (공급대가 × 부가율 × 10%)";
+    $("v_r2l").textContent="(−) 매입 세액공제 (매입액 × 0.5%)";
+  }
+  due=out-ded-cardCredit;
+  if(vatMode==="gen"){due=Math.max(due,-(1e15));} // 일반과세자는 환급 가능
+  else{due=Math.max(due,0);} // 간이과세자는 환급 불가
+  $("v_r1").textContent=fmt(out);
+  $("v_r2").textContent=fmt(ded);
+  $("v_r3").textContent=fmt(cardCredit);
+
+  const box=$("vSealBox");
+  let exempt=vatMode==="simple"&&rev<48000000;
+  if(exempt){
+    box.classList.add("refund");
+    $("vSealLbl").textContent="납부의무 면제 (연 매출 4,800만 미만)";
+    $("vSealAmt").textContent="0 원";
+    $("vSealPer").textContent="신고는 해야 하며, 납부세액만 면제됩니다.";
+  }else if(due<0){
+    box.classList.add("refund");
+    $("vSealLbl").textContent="환급받을 부가가치세";
+    $("vSealAmt").textContent=fmt(-due)+" 원";
+    $("vSealPer").textContent=korean(-due);
+  }else{
+    box.classList.remove("refund");
+    $("vSealLbl").textContent="납부할 부가가치세";
+    $("vSealAmt").textContent=fmt(due)+" 원";
+    $("vSealPer").textContent=korean(due);
+  }
+}
+
+// ---------- 수입금액 집계 ----------
+function aggTotals(){
+  const card=num($("c_card").value), local=num($("c_local").value),
+        bank=num($("c_bank").value), cash=num($("c_cash").value);
+  const total=card+local+bank+cash;
+  return{card,local,bank,cash,total,supply:total/1.1,vat:total/11};
+}
+function calcAgg(){
+  const a=aggTotals();
+  $("a_card").textContent=fmt(a.card);
+  $("a_local").textContent=fmt(a.local);
+  $("a_bank").textContent=fmt(a.bank);
+  $("a_cash").textContent=fmt(a.cash);
+  $("a_total").textContent=fmt(a.total);
+  $("a_supply").textContent=fmt(a.supply);
+  $("a_vat").textContent=fmt(a.vat);
+}
+// ---------- 귀속연도 선택 ----------
+const NOW=new Date();
+const CUR_Y=NOW.getFullYear();
+const Y_MIN=2020, Y_MAX=2030;
+function initYearSelect(){
+  const sel=$("taxYear");
+  const defaultY=Math.min(Math.max(CUR_Y-1,Y_MIN),Y_MAX); // 귀속연도 기본값 = 전년도
+  for(let y=Y_MIN;y<=Y_MAX;y++){
+    const opt=document.createElement("option");
+    opt.value=y;opt.textContent=y+"년";
+    if(y===defaultY)opt.selected=true;
+    sel.appendChild(opt);
+  }
+  sel.addEventListener("change",onYearChange);
+}
+function selectedYear(){return parseInt($("taxYear").value,10)||CUR_Y-1}
+function onYearChange(){
+  const y=selectedYear();
+  $("yearLabel").textContent=y+"년 귀속";
+  $("bracketYearLabel").textContent=y+"년";
+  $("bracketNote").textContent = y<2023
+    ? "2023년 이전 귀속분은 세율 구간이 달랐습니다 (예: 1,200만/4,600만 기준). 정확한 세율은 국세청 고시를 확인하세요."
+    : (y>CUR_Y
+      ? "미래 연도는 현행 세율을 그대로 적용한 예상치입니다. 세법 개정 시 실제 세율은 달라질 수 있습니다."
+      : "2023년 귀속분부터 현재까지 위 세율·누진공제 구간이 동일하게 적용되고 있습니다.");
+  updatePeriod();
+}
+
+// ---------- 집계 기간 표시 ----------
+function updatePeriod(){
+  const y=selectedYear();
+  const p=$("period").value;
+  let rng,due;
+  if(p==="y"){rng=`${y}.01.01 ~ ${y}.12.31 매출`;due=`신고·납부: ${y+1}.05.01 ~ 05.31 (홈택스 종합소득세)`;}
+  else if(p==="v1"){rng=`${y}.01.01 ~ ${y}.06.30 매출`;due=`신고·납부: ${y}.07.01 ~ 07.25`;}
+  else if(p==="v2"){rng=`${y}.07.01 ~ ${y}.12.31 매출`;due=`신고·납부: ${y+1}.01.01 ~ 01.25`;}
+  else{rng=`${y}.01.01 ~ ${y}.12.31 매출 (공급대가)`;due=`신고·납부: ${y+1}.01.01 ~ 01.25`;}
+  $("periodRng").textContent=rng;
+  $("periodDue").textContent=due;
+}
+$("period").addEventListener("change",updatePeriod);
+
+function goTab(id){document.querySelector(`.tab[data-p="${id}"]`).click();}
+$("btnToIncome").addEventListener("click",()=>{
+  const p=$("period").value;
+  if(p==="v1"||p==="v2"){
+    alert("지금 집계한 건 반기(6개월) 매출이에요.\n종합소득세에는 1년 전체 매출이 필요합니다.\n집계 목적을 '종합소득세 신고용'으로 바꾸고 1년치를 넣어주세요.");
+    return;
+  }
+  const a=aggTotals();
+  $("rev").value=fmt(a.supply);
+  $("revK").textContent=korean(a.supply);
+  calcAll();goTab("p1");
+});
+$("btnToVat").addEventListener("click",()=>{
+  const a=aggTotals();
+  const v=vatMode==="gen"?a.supply:a.total;
+  $("vRev").value=fmt(v);
+  $("vRevK").textContent=korean(v);
+  calcAll();goTab("p2");
+});
+
+function calcAll(){calcIncome();calcVat();calcAgg();}
+
+// ---------- 바인딩 ----------
+bindMoney("rev","revK");bindMoney("exp","expK");bindMoney("np","npK");
+bindMoney("salary","salaryK");
+bindMoney("yellow");bindMoney("paid","paidK");
+bindMoney("vRev","vRevK");bindMoney("vBuy","vBuyK");bindMoney("vBuyAmt");bindMoney("vCard");
+bindMoney("c_card","c_cardK");bindMoney("c_local","c_localK");
+bindMoney("c_bank","c_bankK");bindMoney("c_cash","c_cashK");
+["rate","dep","kids"].forEach(id=>$(id).addEventListener("input",calcAll));
+$("vRate").addEventListener("change",calcAll);
+
+// ---------- 플로팅 바 ----------
+(function(){
+  const bar=$("floatBar"), close=$("fbClose");
+  close.addEventListener("click",()=>{
+    bar.style.display="none";
+  });
+})();
+
+initYearSelect();
+onYearChange();
+calcAll();
+</script>
+</body>
+</html>
